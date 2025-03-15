@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/ai"; // Backend proxy
+const API_URL = "https://poem-ai-app-bjrx.onrender.com/api/ai"; // Backend proxy
 
 // Function to generate Arabic poetry
 export const generatePoetry = async (prompt) => {

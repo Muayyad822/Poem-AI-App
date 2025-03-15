@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/auth/me", {
+        const res = await axios.get("https://poem-ai-app-bjrx.onrender.com/api/auth/me", {
           withCredentials: true, // ✅ Sends cookies with request
         });
         setUser(res.data); // ✅ Store user
@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
 
   const logoutUser = async () => {
     try {
-      await axios.post("http://localhost:5000/api/auth/logout", {}, {
+      await axios.post("https://poem-ai-app-bjrx.onrender.com/api/auth/logout", {}, {
         withCredentials: true
       });
       setUser(null);

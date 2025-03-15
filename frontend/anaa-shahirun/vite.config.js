@@ -8,7 +8,7 @@ export default defineConfig({
     port: 5174,  // Use the same port as your backend server
     proxy: {
       '/api': {
-        target: 'http://localhost:5000', // Your backend server
+        target: 'https://poem-ai-app-bjrx.onrender.com', // Your backend server
         changeOrigin: true,
         secure: false,
       },

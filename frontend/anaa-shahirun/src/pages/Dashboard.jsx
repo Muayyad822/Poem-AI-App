@@ -21,7 +21,7 @@ const Dashboard = () => {
     const fetchPoems = async () => {
       setLoading(true);
       try {
-        const response = await axios.get("http://localhost:5000/api/poems", {
+        const response = await axios.get("https://poem-ai-app-bjrx.onrender.com/api/poems", {
           withCredentials: true
         });
         setPoems(response.data);
@@ -38,7 +38,7 @@ const Dashboard = () => {
 
   const handleNewPoem = async () => {
     try {
-      const response = await axios.post("http://localhost:5000/api/poems", {
+      const response = await axios.post("https://poem-ai-app-bjrx.onrender.com/api/poems", {
         title: "قصيدة جديدة",
         content: " "
       }, {

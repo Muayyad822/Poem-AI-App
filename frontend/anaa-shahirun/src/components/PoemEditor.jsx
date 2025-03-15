@@ -18,7 +18,7 @@ const PoemEditor = () => {
 
       try {
         setError(null);
-        const response = await axios.get(`http://localhost:5000/api/poems/${id}`, {
+        const response = await axios.get(`https://poem-ai-app-bjrx.onrender.com/api/poems/${id}`, {
           withCredentials: true,
         });
         if (!response?.data) {

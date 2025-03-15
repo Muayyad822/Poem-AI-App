@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5000/api/auth";
+const API_BASE_URL = "https://poem-ai-app-bjrx.onrender.com/api/auth";
 
 // ✅ Enable credentials for cookies
 axios.defaults.withCredentials = true;
