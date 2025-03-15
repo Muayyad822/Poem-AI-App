@@ -1,0 +1,92 @@
+import React, { useContext, useEffect, useState } from "react";
+import { AuthContext } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-hot-toast";
+
+const Dashboard = () => {
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const [poems, setPoems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Redirect if not logged in
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+
+    // Fetch user's poems
+    const fetchPoems = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get("http://localhost:5000/api/poems", {
+          withCredentials: true
+        });
+        setPoems(response.data);
+      } catch (error) {
+        console.error("Failed to fetch poems:", error);
+        toast.error("Failed to fetch poems. Please try again");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPoems();
+  }, [user, navigate]);
+
+  const handleNewPoem = async () => {
+    try {
+      const response = await axios.post("http://localhost:5000/api/poems", {
+        title: "قصيدة جديدة",
+        content: " "
+      }, {
+        withCredentials: true
+      });
+      
+      // Navigate to edit page for new poem
+      navigate(`/poems/${response.data._id}`);
+    } catch (error) {
+      console.error("Failed to create new poem:", error);
+      toast.error("Failed to create new poem. Please try again");
+    }
+  };
+
+  // Add loading state display
+  if (loading) return <div>Loading...</div>;
+
+  return (
+    <div className="p-4">
+      <h1 className="text-2xl font-bold">لوحة التحكم</h1>
+      <button 
+        onClick={handleNewPoem}
+        className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300"
+      >
+        قصيدة جديدة
+      </button>
+      
+      <div className="mt-8 grid gap-4">
+        {poems.length === 0 ? (
+          <div className="text-center p-8 border rounded shadow">
+            <p className="text-xl text-gray-600">لا توجد قصائد بعد</p>
+            <p className="mt-2 text-gray-500">انقر على زر "قصيدة جديدة" لإنشاء أول قصيدة لك</p>
+          </div>
+        ) : (
+          poems.map(poem => (
+            <div 
+              key={poem._id} 
+              className="p-4 border rounded shadow hover:shadow-md transition duration-300"
+              onClick={() => navigate(`/poems/${poem._id}`)}
+            >
+              <h2 className="text-xl font-semibold">{poem.title}</h2>
+              <p className="text-gray-600 mt-2">{poem.content.substring(0, 100)}...</p>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
