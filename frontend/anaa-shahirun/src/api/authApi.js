@@ -27,8 +27,9 @@ export const signup = async (username, password) => {
 
 // ✅ Helper function to get authentication headers
 export const getAuthHeaders = () => {
-  // Remove localStorage usage since we're using cookies
-  return {};
+  return {
+    'Content-Type': 'application/json'
+  };
 };
 
 // ✅ Example protected request (using cookies)
@@ -45,23 +46,5 @@ export default { login, signup, getProtectedData };
 
 
 
-
-// import axios from "axios";
-
-// export const login = async (username, password) => {
-//   const response = await axios.post("/api/auth/login", {
-//     username,
-//     password,
-//   });
-//   return response.data;
-// };
-
-// export const signup = async (username, password) => {
-//   const response = await axios.post("/api/auth/signup", {
-//     username,
-//     password,
-//   });
-//   return response.data;
-// };
 
 // export default { login, signup };

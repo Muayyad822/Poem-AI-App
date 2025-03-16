@@ -1,4 +1,7 @@
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const generateToken = (userId) => {
   // Generate JWT token that expires in 30 days
