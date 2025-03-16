@@ -24,7 +24,7 @@ app.set("trust proxy", 1);
 const allowedOrigins = [
     "http://localhost:5174",
     "http://localhost:5176",
-    "https://poem-ai-app.vercel.app/auth"
+    "https://poem-ai-app.vercel.app"
   ];
   
   app.use(
@@ -33,12 +33,14 @@ const allowedOrigins = [
         if (!origin || allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
-          callback(new Error("Not allowed by CORS"));
+          console.warn(`Blocked CORS request from: ${origin}`); // Log for debugging
+          callback(null, false); // Reject request without crashing
         }
       },
-      credentials: true, // Allow cookies & authentication headers
+      credentials: true,
     })
   );
+  
 app.use(express.json()); // ✅ Parse JSON body
 app.use(cookieParser()); // ✅ Parse cookies
 
