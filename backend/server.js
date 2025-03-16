@@ -17,8 +17,28 @@ connectDB();
 
 const app = express();
 
+// ✅ Trust proxy for proper client IP handling
+app.set("trust proxy", 1);
+
 // ✅ Middleware
-app.use(cors({ origin: "http://localhost:5174", credentials: true }));
+const allowedOrigins = [
+    "http://localhost:5174",
+    "http://localhost:5176",
+    "https://poem-ai-app.vercel.app/auth"
+  ];
+  
+  app.use(
+    cors({
+      origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      },
+      credentials: true, // Allow cookies & authentication headers
+    })
+  );
 app.use(express.json()); // ✅ Parse JSON body
 app.use(cookieParser()); // ✅ Parse cookies
 
