@@ -1,27 +1,20 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import PoemEditor from "../components/PoemEditor";
 import RhymePanel from "../components/RhymePanel";
-import { AuthContext } from "../context/AuthContext";
 
 const EditorPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
   const [poem, setPoem] = useState(null);
 
   useEffect(() => {
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
-
     const fetchPoem = async () => {
       try {
-        const response = await axios.get(`https://poem-ai-app-bjrx.onrender.com/api/poems/${id}`, {
-          withCredentials: true
-        });
+        const response = await axios.get(
+          `https://poem-ai-app-bjrx.onrender.com/api/poems/${id}`
+        );
         setPoem(response.data);
       } catch (error) {
         console.error("Failed to fetch poem:", error);
@@ -30,15 +23,14 @@ const EditorPage = () => {
     };
 
     fetchPoem();
-  }, [id, user, navigate]);
+  }, [id, navigate]);
 
   const handlePoemUpdate = async (updatedContent) => {
     try {
-      await axios.put(`https://poem-ai-app-bjrx.onrender.com/api/poems/${id}`, {
-        content: updatedContent
-      }, {
-        withCredentials: true
-      });
+      await axios.put(
+        `https://poem-ai-app-bjrx.onrender.com/api/poems/${id}`,
+        { content: updatedContent }
+      );
     } catch (error) {
       console.error("Failed to update poem:", error);
     }

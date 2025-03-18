@@ -39,6 +39,7 @@ const allowedOrigins = [
         }
       },
       credentials: true,
+      allowedHeaders: ["Authorization", "Content-Type"]
     })
   );
   

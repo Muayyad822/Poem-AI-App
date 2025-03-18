@@ -14,27 +14,35 @@ const PoemEditor = () => {
   // Fetch poem from backend
   useEffect(() => {
     const fetchPoem = async () => {
-      if (!id) return; // Don't fetch if no ID
+      if (!id) return; // Don't fetch if there's no ID
 
       try {
         setError(null);
-        const response = await axios.get(`https://poem-ai-app-bjrx.onrender.com/api/poems/${id}`, {
-          withCredentials: true,
-        });
+
+        const response = await axios.get(
+          `https://poem-ai-app-bjrx.onrender.com/api/poems/${id}`
+        );
+
         if (!response?.data) {
           throw new Error("Invalid response format");
         }
-        setPoem(response.data.content || ""); // Ensure empty string if no content
+
+        setPoem(response.data.content || ""); // Default to empty string if no content
       } catch (err) {
         console.error("Error fetching poem:", err);
-        const errorMessage = "لم يتم العثور على القصيدة";
+
+        const errorMessage =
+          err.response?.status === 404
+            ? "لم يتم العثور على القصيدة"
+            : "فشل تحميل القصيدة. حاول مرة أخرى.";
+
         setError(errorMessage);
         toast.error(errorMessage);
       }
     };
 
     fetchPoem();
-  }, [id]);
+  }, [id]); // Keeping only `id` in dependencies since this fetches per poem
 
   const handleInputChange = (e) => {
     const newContent = e.target.value;
@@ -74,15 +82,16 @@ const PoemEditor = () => {
         />
         <div className="mt-6" dir="rtl">
           <div className="flex flex-col justify-between items-center">
-          <button
+            <button
               onClick={handleGenerateSuggestion}
               disabled={loading || !poem.trim()}
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               توليد اقتراح
             </button>
-            <h3 className="text-xl font-bold mt-4 text-blue-600 ">اقتراحات الذكاء الاصطناعي</h3>
-            
+            <h3 className="text-xl font-bold mt-4 text-blue-600 ">
+              اقتراحات الذكاء الاصطناعي
+            </h3>
           </div>
           {loading && <p className="text-gray-600">جارٍ التحميل...</p>}
           {!loading && !error && suggestion && (
@@ -90,7 +99,6 @@ const PoemEditor = () => {
           )}
         </div>
       </div>
-      {/* {error && <p className="mt-4 text-red-500 text-center" dir="rtl">{error}</p>} */}
     </>
   );
 };

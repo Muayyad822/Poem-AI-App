@@ -12,13 +12,11 @@ const Dashboard = () => {
     const fetchPoems = async () => {
       setLoading(true);
       try {
-        const response = await axios.get("https://poem-ai-app-bjrx.onrender.com/api/poems", {
-          withCredentials: true,
-        });
-        setPoems(response.data);
+        const response = await axios.get("https://poem-ai-app-bjrx.onrender.com/api/poems");
+        setPoems(response.data); // ✅ Store poems in state
       } catch (error) {
         console.error("Failed to fetch poems:", error);
-        toast.error("Failed to fetch poems. Please try again");
+        toast.error("فشل تحميل القصائد. حاول مرة أخرى."); // ✅ Show error message
       } finally {
         setLoading(false);
       }
@@ -29,15 +27,15 @@ const Dashboard = () => {
 
   const handleNewPoem = async () => {
     try {
-      const response = await axios.post(
-        "https://poem-ai-app-bjrx.onrender.com/api/poems",
-        { title: "قصيدة جديدة", content: " " },
-        { withCredentials: true }
-      );
+      const response = await axios.post("https://poem-ai-app-bjrx.onrender.com/api/poems", {
+        title: "قصيدة جديدة",
+        content: " ",
+      });
+
       navigate(`/poems/${response.data._id}`);
     } catch (error) {
       console.error("Failed to create new poem:", error);
-      toast.error("Failed to create new poem. Please try again");
+      toast.error("فشل إنشاء القصيدة. حاول مرة أخرى.");
     }
   };
 
