@@ -1,28 +1,19 @@
-import React, { useContext, useEffect, useState } from "react";
-import { AuthContext } from "../context/AuthContext";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 
 const Dashboard = () => {
-  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [poems, setPoems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Redirect if not logged in
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
-
-    // Fetch user's poems
     const fetchPoems = async () => {
       setLoading(true);
       try {
         const response = await axios.get("https://poem-ai-app-bjrx.onrender.com/api/poems", {
-          withCredentials: true
+          withCredentials: true,
         });
         setPoems(response.data);
       } catch (error) {
@@ -34,18 +25,15 @@ const Dashboard = () => {
     };
 
     fetchPoems();
-  }, [user, navigate]);
+  }, []);
 
   const handleNewPoem = async () => {
     try {
-      const response = await axios.post("https://poem-ai-app-bjrx.onrender.com/api/poems", {
-        title: "قصيدة جديدة",
-        content: " "
-      }, {
-        withCredentials: true
-      });
-      
-      // Navigate to edit page for new poem
+      const response = await axios.post(
+        "https://poem-ai-app-bjrx.onrender.com/api/poems",
+        { title: "قصيدة جديدة", content: " " },
+        { withCredentials: true }
+      );
       navigate(`/poems/${response.data._id}`);
     } catch (error) {
       console.error("Failed to create new poem:", error);
@@ -53,19 +41,18 @@ const Dashboard = () => {
     }
   };
 
-  // Add loading state display
   if (loading) return <div>Loading...</div>;
 
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold">لوحة التحكم</h1>
-      <button 
+      <button
         onClick={handleNewPoem}
         className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300"
       >
         قصيدة جديدة
       </button>
-      
+
       <div className="mt-8 grid gap-4">
         {poems.length === 0 ? (
           <div className="text-center p-8 border rounded shadow">
@@ -73,9 +60,9 @@ const Dashboard = () => {
             <p className="mt-2 text-gray-500">انقر على زر "قصيدة جديدة" لإنشاء أول قصيدة لك</p>
           </div>
         ) : (
-          poems.map(poem => (
-            <div 
-              key={poem._id} 
+          poems.map((poem) => (
+            <div
+              key={poem._id}
               className="p-4 border rounded shadow hover:shadow-md transition duration-300"
               onClick={() => navigate(`/poems/${poem._id}`)}
             >
