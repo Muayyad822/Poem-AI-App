@@ -32,7 +32,11 @@ const Dashboard = () => {
         content: " ",
       });
 
-      navigate(`/poems/${response.data._id}`);
+      if (response.data && response.data._id) {
+        navigate(`/poems/${response.data._id}`);
+      } else {
+        toast.error("فشل في الحصول على معرف القصيدة الجديدة.");
+      }
     } catch (error) {
       console.error("Failed to create new poem:", error);
       toast.error("فشل إنشاء القصيدة. حاول مرة أخرى.");

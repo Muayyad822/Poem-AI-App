@@ -7,13 +7,17 @@ const signup = async (req, res) => {
   try {
     const { username, password } = req.body;
     
-    // Add validation
-    if (!username || !password) {
+    // Enhanced validation
+    if (!username?.trim() || !password?.trim()) {
       return res.status(400).json({ message: "Username and password are required" });
     }
     
-    if (password.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    // Add password strength requirements
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({ 
+        message: "Password must be at least 8 characters long and contain both letters and numbers" 
+      });
     }
 
     // Check if user already exists
@@ -50,7 +54,8 @@ const signup = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Signup error:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 

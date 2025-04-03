@@ -50,21 +50,26 @@ const PoemEditor = () => {
   };
 
   const handleGenerateSuggestion = async () => {
-    if (!poem.trim()) return;
+    if (!poem.trim()) {
+      toast.error("Please enter some text first");
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
       const response = await generatePoetry(poem);
+      
       if (!response?.poem) {
         throw new Error("Invalid response format");
       }
+      
       setSuggestion(response.poem);
+      toast.success("Generated successfully");
     } catch (err) {
       console.error("Failed to generate suggestions:", err);
-      const errorMessage = "فشل تحميل اقتراحات الذكاء الاصطناعي";
-      setError(errorMessage);
-      toast.error(errorMessage);
+      setError(err.message || "Failed to generate suggestions");
+      toast.error(err.message || "Failed to generate suggestions");
     } finally {
       setLoading(false);
     }

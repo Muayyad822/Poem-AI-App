@@ -28,20 +28,24 @@ const allowedOrigins = [
     "https://poem-ai-app.vercel.app/auth"
   ];
   
-  app.use(
-    cors({
-      origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
-          callback(null, true);
-        } else {
-          console.warn(`Blocked CORS request from: ${origin}`); // Log for debugging
-          callback(null, false); // Reject request without crashing
-        }
-      },
-      credentials: true,
-      allowedHeaders: ["Authorization", "Content-Type"]
-    })
-  );
+  // More secure CORS configuration
+  const corsOptions = {
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.warn(`Blocked CORS request from: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Authorization', 'Content-Type'],
+    exposedHeaders: ['set-cookie'],
+    maxAge: 86400 // 24 hours
+  };
+
+  app.use(cors(corsOptions));
   
 app.use(express.json()); // ✅ Parse JSON body
 app.use(cookieParser()); // ✅ Parse cookies
@@ -53,7 +57,17 @@ const limiter = rateLimit({
 
 app.use('/api/', limiter);
 
-app.use(helmet());
+// Add security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+}));
 
 // ✅ Routes
 app.use("/api/auth", authRoutes);

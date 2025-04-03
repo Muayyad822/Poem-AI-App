@@ -12,6 +12,12 @@ dotenv.config({ path: path.join(rootDir, '.env') });
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 const API_KEY = process.env.GEMINI_API_KEY;
 
+// Add error handling for API key
+if (!API_KEY) {
+  console.error("GEMINI_API_KEY is not configured");
+  throw new Error("AI service configuration error");
+}
+
 // Function to generate Arabic poetry
 const generatePoetry = async (req, res) => {
   try {
@@ -32,9 +38,14 @@ const generatePoetry = async (req, res) => {
     القصيدة:
     `;
 
+    // Add timeout to axios request
     const response = await axios.post(`${GEMINI_API_URL}?key=${API_KEY}`, {
       contents: [{ parts: [{ text: arabicPrompt }] }]
-    });
+    }, { timeout: 10000 }); // 10 second timeout
+
+    if (!response.data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+      throw new Error("Invalid AI response format");
+    }
 
     const generatedText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
     const verses = generatedText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
@@ -43,9 +54,16 @@ const generatePoetry = async (req, res) => {
 
   } catch (error) {
     console.error("Poetry Generation Error:", error);
-    res.status(500).json({
-      error: "AI service error",
-      details: error.message || "Service unavailable"
+    // More specific error messages
+    const errorMessage = error.response?.status === 429 ? 
+      "AI service quota exceeded" : 
+      error.code === 'ECONNABORTED' ? 
+        "AI service timeout" : 
+        "AI service error";
+    
+    res.status(error.response?.status || 500).json({
+      error: errorMessage,
+      details: error.message
     });
   }
 };
@@ -85,11 +103,15 @@ const validatePoetry = async (req, res) => {
 
 // Function to get rhyming words
 const getRhymes = async (req, res) => {
+  console.log('getRhymes endpoint hit', { query: req.query, params: req.params });
+  
   try {
-    const { word } = req.body;
+    const { word } = req.query;
     if (!word) {
       return res.status(400).json({ error: "Word parameter is required" });
     }
+
+    console.log('Processing word:', word);
 
     const rhymePrompt = `
     أعطني خمس كلمات عربية فصيحة تقفى مع الكلمة التالية: ${word}
@@ -104,16 +126,24 @@ const getRhymes = async (req, res) => {
 
     const response = await axios.post(`${GEMINI_API_URL}?key=${API_KEY}`, {
       contents: [{ parts: [{ text: rhymePrompt }] }]
+    }, {
+      timeout: 10000 // 10 second timeout
     });
 
-    const generatedText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!response.data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+      throw new Error("Invalid AI response format");
+    }
+
+    const generatedText = response.data.candidates[0].content.parts[0].text;
     const rhymes = generatedText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
 
-    res.json({ rhymes });
+    console.log('Generated rhymes:', rhymes);
+    
+    return res.json({ rhymes });
 
   } catch (error) {
     console.error("Rhyme Generation Error:", error);
-    res.status(500).json({
+    return res.status(error.response?.status || 500).json({
       error: "Rhyme generation failed",
       details: error.message || "Service unavailable"
     });
