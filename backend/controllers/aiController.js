@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -9,7 +9,6 @@ const rootDir = path.join(__dirname, '..');
 // Load environment variables
 dotenv.config({ path: path.join(rootDir, '.env') });
 
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 const API_KEY = process.env.GEMINI_API_KEY;
 
 // Add error handling for API key
@@ -17,6 +16,10 @@ if (!API_KEY) {
   console.error("GEMINI_API_KEY is not configured");
   throw new Error("AI service configuration error");
 }
+
+// Initialize Gemini
+const genAI = new GoogleGenerativeAI(API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
 // Function to generate Arabic poetry
 const generatePoetry = async (req, res) => {
@@ -38,32 +41,65 @@ const generatePoetry = async (req, res) => {
     القصيدة:
     `;
 
-    // Add timeout to axios request
-    const response = await axios.post(`${GEMINI_API_URL}?key=${API_KEY}`, {
-      contents: [{ parts: [{ text: arabicPrompt }] }]
-    }, { timeout: 10000 }); // 10 second timeout
-
-    if (!response.data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-      throw new Error("Invalid AI response format");
-    }
-
-    const generatedText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const result = await model.generateContent(arabicPrompt);
+    const response = await result.response;
+    const generatedText = response.text();
+    
     const verses = generatedText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
     
     res.json({ poem: verses.join('\n'), verses: verses.length });
 
   } catch (error) {
     console.error("Poetry Generation Error:", error);
-    // More specific error messages
-    const errorMessage = error.response?.status === 429 ? 
+    const errorMessage = error.message?.includes('quota') ? 
       "AI service quota exceeded" : 
-      error.code === 'ECONNABORTED' ? 
+      error.message?.includes('timeout') ? 
         "AI service timeout" : 
         "AI service error";
     
-    res.status(error.response?.status || 500).json({
+    res.status(500).json({
       error: errorMessage,
       details: error.message
+    });
+  }
+};
+
+// Function to get rhyming words
+const getRhymes = async (req, res) => {
+  try {
+    const { word } = req.query;
+    if (!word) {
+      return res.status(400).json({ error: "Word parameter is required" });
+    }
+
+    console.log('Processing word:', word);
+
+    const rhymePrompt = `
+    أعطني خمس كلمات عربية فصيحة تقفى مع الكلمة التالية: ${word}
+
+    الشروط:
+    - يجب أن تكون الكلمات صحيحة لغويًا.
+    - يجب أن تنتهي بنفس القافية.
+    - كل كلمة في سطر منفصل.
+
+    الكلمات:
+    `;
+
+    const result = await model.generateContent(rhymePrompt);
+    const response = await result.response;
+    const generatedText = response.text();
+    
+    const rhymes = generatedText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+
+    console.log('Generated rhymes:', rhymes);
+    
+    return res.json({ rhymes });
+
+  } catch (error) {
+    console.error("Rhyme Generation Error:", error);
+    return res.status(500).json({
+      error: "Rhyme generation failed",
+      details: error.message || "Service unavailable"
     });
   }
 };
@@ -84,11 +120,9 @@ const validatePoetry = async (req, res) => {
     قدم تقريرًا يوضح البحر العروضي المستخدم، حرف الروي، ومدى التزام النص بالقواعد الشعرية.
     `;
 
-    const response = await axios.post(`${GEMINI_API_URL}?key=${API_KEY}`, {
-      contents: [{ parts: [{ text: validationPrompt }] }]
-    });
-
-    const analysis = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const result = await model.generateContent(validationPrompt);
+    const response = await result.response;
+    const analysis = response.text();
 
     res.json({ analysis: analysis.trim() });
 
@@ -96,55 +130,6 @@ const validatePoetry = async (req, res) => {
     console.error("Poetry Validation Error:", error);
     res.status(500).json({
       error: "Poetry validation failed",
-      details: error.message || "Service unavailable"
-    });
-  }
-};
-
-// Function to get rhyming words
-const getRhymes = async (req, res) => {
-  console.log('getRhymes endpoint hit', { query: req.query, params: req.params });
-  
-  try {
-    const { word } = req.query;
-    if (!word) {
-      return res.status(400).json({ error: "Word parameter is required" });
-    }
-
-    console.log('Processing word:', word);
-
-    const rhymePrompt = `
-    أعطني خمس كلمات عربية فصيحة تقفى مع الكلمة التالية: ${word}
-
-    الشروط:
-    - يجب أن تكون الكلمات صحيحة لغويًا.
-    - يجب أن تنتهي بنفس القافية.
-    - كل كلمة في سطر منفصل.
-
-    الكلمات:
-    `;
-
-    const response = await axios.post(`${GEMINI_API_URL}?key=${API_KEY}`, {
-      contents: [{ parts: [{ text: rhymePrompt }] }]
-    }, {
-      timeout: 10000 // 10 second timeout
-    });
-
-    if (!response.data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-      throw new Error("Invalid AI response format");
-    }
-
-    const generatedText = response.data.candidates[0].content.parts[0].text;
-    const rhymes = generatedText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-
-    console.log('Generated rhymes:', rhymes);
-    
-    return res.json({ rhymes });
-
-  } catch (error) {
-    console.error("Rhyme Generation Error:", error);
-    return res.status(error.response?.status || 500).json({
-      error: "Rhyme generation failed",
       details: error.message || "Service unavailable"
     });
   }
@@ -170,11 +155,9 @@ const analyzePoetryStructure = async (req, res) => {
     - أي أخطاء عروضية أو نحوية.
     `;
 
-    const response = await axios.post(`${GEMINI_API_URL}?key=${API_KEY}`, {
-      contents: [{ parts: [{ text: analysisPrompt }] }]
-    });
-
-    const analysis = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const result = await model.generateContent(analysisPrompt);
+    const response = await result.response;
+    const analysis = response.text();
 
     res.json({ analysis: analysis.trim() });
 
@@ -187,9 +170,9 @@ const analyzePoetryStructure = async (req, res) => {
   }
 };
 
-export default { 
-  generatePoetry, 
-  validatePoetry, 
-  getRhymes, 
+export default {
+  generatePoetry,
+  validatePoetry,
+  getRhymes,
   analyzePoetryStructure
 };
