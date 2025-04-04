@@ -78,8 +78,8 @@ const PoemEditor = () => {
   return (
     <>
       <div className="p-6 m-2 bg-gray-100 rounded-lg shadow-md">
-        <textarea
-          className="w-full h-64 p-4 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <input
+          className="w-full h-12 p-4 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="اكتب قصيدتك هنا..."
           value={poem}
           onChange={handleInputChange}
@@ -100,7 +100,7 @@ const PoemEditor = () => {
           </div>
           {loading && <p className="text-gray-600">جارٍ التحميل...</p>}
           {!loading && !error && suggestion && (
-            <p className="mt-2 text-gray-700">{suggestion}</p>
+            <p className="mt-2 text-gray-700 p-4 border-4 border-blue-400">{suggestion}</p>
           )}
         </div>
       </div>
