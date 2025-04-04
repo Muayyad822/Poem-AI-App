@@ -42,7 +42,7 @@ const EditorPage = () => {
     <div className="p-4">
       <h1 className="text-2xl font-bold">{poem.title}</h1>
       <PoemEditor initialContent={poem.content} onUpdate={handlePoemUpdate} />
-      <RhymePanel word="شمس" />
+      <RhymePanel/>
     </div>
   );
 };
